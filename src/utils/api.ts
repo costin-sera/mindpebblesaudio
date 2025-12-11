@@ -50,7 +50,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   const audioFile = new File([audioBlob], filename, { type: mimeType });
   formData.append('file', audioFile);
   formData.append('model_id', 'scribe_v1');
-  formData.append('language', 'en'); // Explicitly set language to English
+  formData.append('language_code', 'en'); // Explicitly set language to English
 
   const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
     method: 'POST',
@@ -281,6 +281,7 @@ Continue the conversation naturally, staying in character. Ask thoughtful follow
 export const AVAILABLE_VOICES = [
   { id: 'pNInz6obpgDQGcFmaJgB', name: 'Adam (Deep, American)' },
   { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah (Calm, Soft)' },
+  { id: 'FRCFNaM8GFkELyft3w7J', name: 'Smoky Lady (Dutch)' },
 ];
 
 /**
