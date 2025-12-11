@@ -19,6 +19,7 @@ function App() {
   const [customPersonas, setCustomPersonas] = useState<Persona[]>([]);
   const [showPersonaCreator, setShowPersonaCreator] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
+  const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
 
   // Get user-specific storage key
   const getStorageKey = () => {
@@ -141,7 +142,12 @@ function App() {
     setCustomPersonas(prev => [...prev, persona]);
     setSelectedPersona(persona);
     setShowPersonaCreator(false);
-    alert(`Persona "${persona.name}" created successfully! You can now use it for journaling.`);
+
+    // Show toast notification
+    setToast({ message: `${persona.name} created successfully!`, visible: true });
+    setTimeout(() => {
+      setToast({ message: '', visible: false });
+    }, 3000);
   };
 
   const handlePersonaChange = (value: string) => {
@@ -325,6 +331,13 @@ function App() {
             onPersonaCreated={handlePersonaCreated}
             onCancel={() => setShowPersonaCreator(false)}
           />
+        )}
+
+        {toast.visible && (
+          <div className="toast-notification">
+            <span className="toast-icon">✓</span>
+            {toast.message}
+          </div>
         )}
       </SignedIn>
     </div>
