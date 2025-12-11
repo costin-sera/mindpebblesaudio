@@ -116,7 +116,7 @@ function App() {
         feedbackText: analysis.feedbackText,
         feedbackAudioUrl,
         originalAudioUrl,
-        voiceId: selectedPersona?.name || AVAILABLE_VOICES.find(v => v.id === selectedVoiceId)?.name || 'Unknown',
+        voiceId: selectedPersona?.voiceId || selectedVoiceId,
       };
 
       // Add to entries and select it
