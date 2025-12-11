@@ -158,6 +158,11 @@ function App() {
     }
   };
 
+  const handleUpdateEntry = (updatedEntry: JournalEntry) => {
+    setEntries(prev => prev.map(e => e.id === updatedEntry.id ? updatedEntry : e));
+    setSelectedEntry(updatedEntry);
+  };
+
   return (
     <div className="app">
       <div className="app-main">
@@ -246,7 +251,7 @@ function App() {
 
         {!isProcessing && selectedEntry && (
           <div className="insight-container">
-            <InsightCard entry={selectedEntry} />
+            <InsightCard entry={selectedEntry} onUpdateEntry={handleUpdateEntry} />
           </div>
         )}
 

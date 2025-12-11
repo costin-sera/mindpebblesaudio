@@ -1,13 +1,19 @@
 import { useState } from 'react';
 import type { JournalEntry } from '../types';
+import ConversationMode from './ConversationMode';
+import { AVAILABLE_VOICES } from '../utils/api';
 import './InsightCard.css';
 
 interface InsightCardProps {
   entry: JournalEntry;
+  onUpdateEntry?: (updatedEntry: JournalEntry) => void;
 }
 
-export default function InsightCard({ entry }: InsightCardProps) {
+export default function InsightCard({ entry, onUpdateEntry }: InsightCardProps) {
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showConversation, setShowConversation] = useState(false);
+
+  const voiceName = AVAILABLE_VOICES.find(v => v.id === entry.voiceId)?.name || entry.voiceId;
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -45,13 +51,33 @@ export default function InsightCard({ entry }: InsightCardProps) {
     }
   };
 
+  if (showConversation && onUpdateEntry) {
+    return (
+      <ConversationMode
+        entry={entry}
+        onUpdateEntry={onUpdateEntry}
+        onClose={() => setShowConversation(false)}
+      />
+    );
+  }
+
   return (
     <div className="insight-card">
       {/* Header */}
       <div className="insight-header">
         <div className="insight-date">{formatDate(entry.createdAt)}</div>
-        <div className="insight-voice">Voice: {entry.voiceId}</div>
+        <div className="insight-voice">Voice: {voiceName}</div>
       </div>
+
+      {/* Continue Conversation Button */}
+      {onUpdateEntry && (
+        <button
+          className="continue-conversation-btn"
+          onClick={() => setShowConversation(true)}
+        >
+          💬 Continue Conversation
+        </button>
+      )}
 
       {/* AI Reflection - Featured at the top */}
       <div className="ai-reflection-featured">
