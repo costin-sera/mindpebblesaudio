@@ -166,4 +166,6 @@ export const AVAILABLE_VOICES = [
   { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel (Warm, Gentle)' },
   { id: 'AZnzlk1XvdvUeBnXmlld', name: 'Domi (Supportive, Strong)' },
   { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Calm, Deep)' },
+  { id: 'ljo9gAlSqKOvF6D8sOsX', name: 'Bjorn (Epic, Medieval)' },
+  { id: 'keLVje3aBMuRpxuu0bqO', name: 'Scott (Energetic, Scottish)' },
 ];
