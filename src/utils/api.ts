@@ -90,10 +90,10 @@ export async function analyzeTranscript(
     const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
     systemPrompt = persona
       ? persona.systemPrompt
-      : "You are an empathetic AI therapist providing emotional insights from journal entries.";
+      : 'You are an empathetic AI therapist providing emotional insights from journal entries.';
     feedbackGuidance = persona
       ? `Write feedback in character as ${persona.name}. ${persona.feedbackStyle}.`
-      : "Provide gentle, supportive feedback.";
+      : 'Provide gentle, supportive feedback.';
   }
 
   const prompt = `Analyze the following voice journal entry and provide structured insights.
@@ -209,6 +209,19 @@ Your feedback is tender yet insightful, helping people feel heard and understood
 You use soft, nurturing language and focus on emotional healing and self-acceptance.`,
     feedbackStyle: 'Gentle, compassionate, and emotionally attuned',
   },
+  'FRCFNaM8GFkELyft3w7J': {
+    name: 'Smoky Lady',
+    personality: 'A Dutch woman with a smoky voice shaped by a vivid and eventful life.',
+    systemPrompt: `Her voice carries a husky warmth that reflects years of varied experiences and late-night conversations.
+She grew up between coastal towns and busy city streets, collecting stories and friendships along the way.
+People often notice her confident presence and her habit of speaking with a calm, rhythmic cadence.
+She has worked in several fields, moving from one opportunity to another as her interests evolved.
+Travel, music, and shifting relationships have added color and complexity to her outlook.
+She maintains a grounded sense of humor that helps her navigate both setbacks and successes.
+Her past is full of unexpected turns, yet she treats each chapter as part of a larger, ongoing journey.
+She approaches the future with pragmatic optimism, rooted in everything she has already lived.`,
+    feedbackStyle: 'Concise, steady observations that cut to the practical core',
+  },
 };
 
 /**
@@ -221,9 +234,7 @@ export async function continueConversation(
   journalContext: { transcript: string; emotions: string[]; topics: string[] }
 ): Promise<string> {
   const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
-  const systemPrompt = persona
-    ? persona.systemPrompt
-    : 'You are an empathetic AI therapist.';
+  const systemPrompt = persona ? persona.systemPrompt : 'You are an empathetic AI therapist.';
 
   const contextPrompt = `Original journal entry: "${journalContext.transcript}"
 Main emotions: ${journalContext.emotions.join(', ')}
@@ -363,12 +374,11 @@ export async function generateVoiceFromPrompt(prompt: string): Promise<{
   let previewAudioUrl: string;
 
   if (preview.audio_base_64) {
-    const audioBlob = await fetch(`data:audio/mpeg;base64,${preview.audio_base_64}`)
-      .then(r => r.blob());
+    const audioBlob = await fetch(`data:audio/mpeg;base64,${preview.audio_base_64}`).then((r) => r.blob());
     previewAudioUrl = URL.createObjectURL(audioBlob);
   } else if (preview.audio) {
     // If direct audio URL is provided
-    const audioBlob = await fetch(preview.audio).then(r => r.blob());
+    const audioBlob = await fetch(preview.audio).then((r) => r.blob());
     previewAudioUrl = URL.createObjectURL(audioBlob);
   } else {
     throw new Error('No audio data in voice preview');
@@ -384,11 +394,7 @@ export async function generateVoiceFromPrompt(prompt: string): Promise<{
  * Create a voice from a generated voice ID
  * This converts the preview voice into a permanent voice
  */
-export async function createVoiceFromPreview(
-  voiceId: string,
-  name: string,
-  description: string
-): Promise<string> {
+export async function createVoiceFromPreview(voiceId: string, name: string, description: string): Promise<string> {
   console.log('Creating permanent voice with:', { voiceId, name, description });
 
   const requestBody = {
