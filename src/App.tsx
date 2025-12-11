@@ -4,8 +4,10 @@ import Recorder from './components/Recorder';
 import InsightCard from './components/InsightCard';
 import Timeline from './components/Timeline';
 import PersonaCreator from './components/PersonaCreator';
+import UpgradeModal from './components/UpgradeModal';
 import type { JournalEntry, Persona } from './types';
 import { transcribeAudio, analyzeTranscript, generateSpeech, AVAILABLE_VOICES } from './utils/api';
+import { isPremiumUser, getRemainingFreeEntries, hasReachedLimit, getSubscriptionInfo, activatePremium } from './utils/stripe';
 import './App.css';
 
 const PERSONAS_STORAGE_KEY = 'mindpebbles_personas';
@@ -20,11 +22,32 @@ function App() {
   const [showPersonaCreator, setShowPersonaCreator] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({ message: '', visible: false });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   // Get user-specific storage key
   const getStorageKey = () => {
     return user ? `mindpebbles_entries_${user.id}` : 'mindpebbles_entries_guest';
   };
+
+  // Check premium status on mount
+  useEffect(() => {
+    setIsPremium(isPremiumUser());
+    
+    // Check if returning from successful Stripe payment
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+      // Activate premium
+      activatePremium();
+      setIsPremium(true);
+      
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+      
+      // Show success message
+      alert('🎉 Payment Successful!\n\nYour Premium subscription is now active!');
+    }
+  }, []);
 
   // Load entries from localStorage on mount or when user changes
   useEffect(() => {
@@ -75,6 +98,12 @@ function App() {
   }, [customPersonas]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
+    // Check entry limit before processing
+    if (hasReachedLimit(entries.length)) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -231,9 +260,37 @@ function App() {
             <div className="auth-section">
               <div className="user-info">
                 <span className="welcome-text">Welcome, {user?.firstName || 'User'}!</span>
+                {isPremium ? (
+                  <span className="premium-badge">⭐ Premium</span>
+                ) : (
+                  <>
+                    <button className="upgrade-badge" onClick={() => setShowUpgradeModal(true)}>
+                      ⬆️ Upgrade
+                    </button>
+                    {/* Demo helper: manual premium activation */}
+                    <button 
+                      className="demo-activate-badge" 
+                      onClick={() => {
+                        if (confirm('Activate Premium? (Demo purposes)')) {
+                          activatePremium();
+                          setIsPremium(true);
+                          window.location.reload();
+                        }
+                      }}
+                      title="Demo: Activate premium after Stripe payment"
+                    >
+                      ✓
+                    </button>
+                  </>
+                )}
                 <UserButton afterSignOutUrl="/" />
               </div>
             </div>
+            {!isPremium && entries.length > 0 && (
+              <div className="usage-counter">
+                <span>{getRemainingFreeEntries(entries.length)} of 3 free entries remaining</span>
+              </div>
+            )}
           </header>
 
         <div className="voice-selector">
@@ -338,6 +395,13 @@ function App() {
             <span className="toast-icon">✓</span>
             {toast.message}
           </div>
+        )}
+
+        {showUpgradeModal && (
+          <UpgradeModal
+            onClose={() => setShowUpgradeModal(false)}
+            remainingEntries={getRemainingFreeEntries(entries.length)}
+          />
         )}
       </SignedIn>
     </div>
