@@ -50,6 +50,7 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
   const audioFile = new File([audioBlob], filename, { type: mimeType });
   formData.append('file', audioFile);
   formData.append('model_id', 'scribe_v1');
+  formData.append('language', 'en'); // Explicitly set language to English
 
   const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
     method: 'POST',
