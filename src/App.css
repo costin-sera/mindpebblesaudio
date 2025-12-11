@@ -117,16 +117,20 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  max-width: 400px;
+  max-width: 600px;
   margin: 0 auto;
 }
 
 .voice-selector label {
   font-weight: 600;
   color: #475569;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .voice-selector select {
+  flex: 1;
+  min-width: 0;
   padding: 0.5rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
