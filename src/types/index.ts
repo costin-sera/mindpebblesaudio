@@ -11,6 +11,13 @@ export interface PsychMarker {
   description: string;
 }
 
+export interface ConversationTurn {
+  role: 'user' | 'assistant';
+  text: string;
+  audioUrl?: string;
+  timestamp: string;
+}
+
 export interface JournalEntry {
   id: string;
   createdAt: string;
@@ -23,4 +30,5 @@ export interface JournalEntry {
   feedbackAudioUrl: string;
   originalAudioUrl: string;
   voiceId: string;
+  conversation?: ConversationTurn[];
 }

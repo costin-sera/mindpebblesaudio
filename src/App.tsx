@@ -81,7 +81,7 @@ function App() {
         feedbackText: analysis.feedbackText,
         feedbackAudioUrl,
         originalAudioUrl,
-        voiceId: AVAILABLE_VOICES.find(v => v.id === selectedVoiceId)?.name || 'Unknown',
+        voiceId: selectedVoiceId,
       };
 
       // Add to entries and select it
@@ -100,6 +100,11 @@ function App() {
     if (entry) {
       setSelectedEntry(entry);
     }
+  };
+
+  const handleUpdateEntry = (updatedEntry: JournalEntry) => {
+    setEntries(prev => prev.map(e => e.id === updatedEntry.id ? updatedEntry : e));
+    setSelectedEntry(updatedEntry);
   };
 
   return (
@@ -176,7 +181,7 @@ function App() {
 
         {!isProcessing && selectedEntry && (
           <div className="insight-container">
-            <InsightCard entry={selectedEntry} />
+            <InsightCard entry={selectedEntry} onUpdateEntry={handleUpdateEntry} />
           </div>
         )}
 
