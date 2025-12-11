@@ -168,4 +168,5 @@ export const AVAILABLE_VOICES = [
   { id: 'ErXwobaYiN019PkySvjV', name: 'Antoni (Calm, Deep)' },
   { id: 'ljo9gAlSqKOvF6D8sOsX', name: 'Bjorn (Epic, Medieval)' },
   { id: 'keLVje3aBMuRpxuu0bqO', name: 'Scott (Energetic, Scottish)' },
+  { id: 'hUCL5yChll0oZqA0wCKH', name: 'Old American Guy (Old, American)' },
 ];
