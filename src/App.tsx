@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react';
 import Recorder from './components/Recorder';
 import InsightCard from './components/InsightCard';
 import Timeline from './components/Timeline';
-import type { JournalEntry } from './types';
+import PersonaCreator from './components/PersonaCreator';
+import type { JournalEntry, Persona } from './types';
 import { transcribeAudio, analyzeTranscript, generateSpeech, AVAILABLE_VOICES } from './utils/api';
 import './App.css';
 
 const STORAGE_KEY = 'mindpebbles_entries';
+const PERSONAS_STORAGE_KEY = 'mindpebbles_personas';
 
 function App() {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedVoiceId, setSelectedVoiceId] = useState(AVAILABLE_VOICES[0].id);
+  const [customPersonas, setCustomPersonas] = useState<Persona[]>([]);
+  const [showPersonaCreator, setShowPersonaCreator] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
 
   // Load entries from localStorage on mount
   useEffect(() => {
@@ -30,12 +35,32 @@ function App() {
     }
   }, []);
 
+  // Load custom personas from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(PERSONAS_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setCustomPersonas(parsed);
+      } catch (error) {
+        console.error('Error loading personas:', error);
+      }
+    }
+  }, []);
+
   // Save entries to localStorage whenever they change
   useEffect(() => {
     if (entries.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
     }
   }, [entries]);
+
+  // Save custom personas to localStorage whenever they change
+  useEffect(() => {
+    if (customPersonas.length > 0) {
+      localStorage.setItem(PERSONAS_STORAGE_KEY, JSON.stringify(customPersonas));
+    }
+  }, [customPersonas]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     setIsProcessing(true);
@@ -47,13 +72,22 @@ function App() {
       console.log('Transcript:', transcript);
 
       // Step 2: Analyze transcript with character-specific interpretation
-      console.log('Analyzing transcript with voice persona:', selectedVoiceId);
-      const analysis = await analyzeTranscript(transcript, selectedVoiceId);
+      console.log('Analyzing transcript with voice persona:', selectedPersona?.name || selectedVoiceId);
+      const analysis = await analyzeTranscript(
+        transcript,
+        selectedPersona?.voiceId || selectedVoiceId,
+        selectedPersona ? {
+          name: selectedPersona.name,
+          systemPrompt: selectedPersona.systemPrompt,
+          feedbackStyle: selectedPersona.feedbackStyle,
+        } : undefined
+      );
       console.log('Analysis:', analysis);
 
       // Step 3: Generate spoken feedback
       console.log('Generating speech...');
-      const feedbackAudioUrl = await generateSpeech(analysis.feedbackText, selectedVoiceId);
+      const voiceIdForTTS = selectedPersona?.voiceId || selectedVoiceId;
+      const feedbackAudioUrl = await generateSpeech(analysis.feedbackText, voiceIdForTTS);
       console.log('Speech generated');
 
       // Create audio URL for original recording
@@ -71,7 +105,7 @@ function App() {
         feedbackText: analysis.feedbackText,
         feedbackAudioUrl,
         originalAudioUrl,
-        voiceId: AVAILABLE_VOICES.find(v => v.id === selectedVoiceId)?.name || 'Unknown',
+        voiceId: selectedPersona?.name || AVAILABLE_VOICES.find(v => v.id === selectedVoiceId)?.name || 'Unknown',
       };
 
       // Add to entries and select it
@@ -92,6 +126,27 @@ function App() {
     }
   };
 
+  const handlePersonaCreated = (persona: Persona) => {
+    setCustomPersonas(prev => [...prev, persona]);
+    setSelectedPersona(persona);
+    setShowPersonaCreator(false);
+    alert(`Persona "${persona.name}" created successfully! You can now use it for journaling.`);
+  };
+
+  const handlePersonaChange = (value: string) => {
+    if (value === 'create-new') {
+      setShowPersonaCreator(true);
+    } else if (value.startsWith('custom-')) {
+      const personaId = value.replace('custom-', '');
+      const persona = customPersonas.find(p => p.id === personaId);
+      setSelectedPersona(persona || null);
+      setSelectedVoiceId(''); // Clear built-in voice selection
+    } else {
+      setSelectedPersona(null);
+      setSelectedVoiceId(value);
+    }
+  };
+
   return (
     <div className="app">
       <div className="app-main">
@@ -104,18 +159,32 @@ function App() {
         </header>
 
         <div className="voice-selector">
-          <label htmlFor="voice-select">AI Voice:</label>
+          <label htmlFor="voice-select">AI Personality:</label>
           <select
             id="voice-select"
-            value={selectedVoiceId}
-            onChange={(e) => setSelectedVoiceId(e.target.value)}
+            value={selectedPersona ? `custom-${selectedPersona.id}` : selectedVoiceId}
+            onChange={(e) => handlePersonaChange(e.target.value)}
             disabled={isProcessing}
           >
-            {AVAILABLE_VOICES.map(voice => (
-              <option key={voice.id} value={voice.id}>
-                {voice.name}
-              </option>
-            ))}
+            <optgroup label="Built-in Voices">
+              {AVAILABLE_VOICES.map(voice => (
+                <option key={voice.id} value={voice.id}>
+                  {voice.name}
+                </option>
+              ))}
+            </optgroup>
+            {customPersonas.length > 0 && (
+              <optgroup label="Custom Personalities">
+                {customPersonas.map(persona => (
+                  <option key={persona.id} value={`custom-${persona.id}`}>
+                    {persona.name} - {persona.personality}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            <optgroup label="Actions">
+              <option value="create-new">+ Create New Personality</option>
+            </optgroup>
           </select>
         </div>
 
@@ -178,6 +247,13 @@ function App() {
         selectedId={selectedEntry?.id || null}
         onSelectEntry={handleSelectEntry}
       />
+
+      {showPersonaCreator && (
+        <PersonaCreator
+          onPersonaCreated={handlePersonaCreated}
+          onCancel={() => setShowPersonaCreator(false)}
+        />
+      )}
     </div>
   );
 }

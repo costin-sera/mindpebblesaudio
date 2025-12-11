@@ -11,6 +11,17 @@ export interface PsychMarker {
   description: string;
 }
 
+export interface Persona {
+  id: string;
+  name: string;
+  personality: string;
+  systemPrompt: string;
+  feedbackStyle: string;
+  voiceId: string;
+  createdAt: string;
+  isCustom: boolean;
+}
+
 export interface JournalEntry {
   id: string;
   createdAt: string;

@@ -1,6 +1,6 @@
-# MindPebbles — Voice Journaling with AI Audio Reflection  
-**Hackathon Product Specification**  
-_Last updated: 2025-12-10_
+# MindPebbles — Voice Journaling with AI Audio Reflection
+**Hackathon Product Specification**
+_Last updated: 2025-12-11_
 
 MindPebbles is a **lightweight, audio-first journaling web app** designed for rapid introspection.  
 Users record short voice entries (“pebbles”), which the system transforms into:
@@ -56,9 +56,11 @@ API keys will be visible in DevTools — acceptable for hackathons.
 - **LocalStorage** for saving entries
 
 ### AI + Audio Services
-- **ElevenLabs STT (Speech-to-Text)** — transcribe voice notes  
-- **OpenAI / LLM** — analyze message + extract emotions/topics/psychological markers  
-- **ElevenLabs TTS (Text-to-Speech)** — generate spoken reflection feedback  
+- **ElevenLabs STT (Speech-to-Text)** — transcribe voice notes
+- **OpenAI / LLM** — analyze message + extract emotions/topics/psychological markers
+- **ElevenLabs TTS (Text-to-Speech)** — generate spoken reflection feedback
+- **ElevenLabs Voice Design API** — generate custom AI voices from text descriptions
+- **OpenAI GPT-4** — generate custom persona personalities and therapeutic approaches  
 
 ---
 
@@ -68,9 +70,10 @@ API keys will be visible in DevTools — acceptable for hackathons.
 
 Displays:
 
-- Big round **Record** button  
-- Dropdown for selecting **Voice Style** (ElevenLabs voice)  
-- Timeline of past “pebbles” on the right  
+- Big round **Record** button
+- Dropdown for selecting **AI Personality** (built-in voices or custom personas)
+- Option to **Create New Personality** from the dropdown
+- Timeline of past "pebbles" on the right  
 
 ## 4.2 Recording Flow
 
@@ -107,9 +110,35 @@ Each card contains:
 
 Clicking a card loads it into the left detail pane.
 
+## 4.5 Custom Personality Creation Flow
+
+1. User selects **"+ Create New Personality"** from the AI Personality dropdown
+2. A modal opens with:
+   - Description input field for the desired personality
+   - Example personality chips (Southern Grandmother, Zen Monk, Life Coach, etc.)
+   - Generate button
+3. User enters or selects a description and clicks **Generate Personality**
+4. System makes two parallel API calls:
+   - **OpenAI** generates persona details (name, personality, system prompt, feedback style)
+   - **ElevenLabs Voice Design API** generates a custom voice matching the description
+5. Preview modal shows:
+   - Generated persona name and description
+   - Full therapeutic approach/system prompt
+   - Feedback style guidelines
+   - Audio player to preview the generated voice
+6. User can:
+   - **Regenerate** to try again with the same or modified prompt
+   - **Confirm & Create** to save the persona permanently
+7. Once confirmed, the persona is:
+   - Saved to localStorage under `mindpebbles_personas`
+   - Added to the AI Personality dropdown
+   - Automatically selected for the next journal entry
+
 ---
 
 # 5. Data Model
+
+## 5.1 Journal Entry
 
 ```json
 {
@@ -132,9 +161,29 @@ Clicking a card loads it into the left detail pane.
 }
 ```
 
-Stored in `localStorage` under key:  
+Stored in `localStorage` under key:
 ```
 mindpebbles_entries
+```
+
+## 5.2 Custom Persona
+
+```json
+{
+  "id": "uuid",
+  "name": "Dr. Sophia",
+  "personality": "Warm, empathetic clinical psychologist with gentle wisdom",
+  "systemPrompt": "You are Dr. Sophia, a warm and empathetic clinical psychologist...",
+  "feedbackStyle": "Provide compassionate, insightful reflections that validate emotions...",
+  "voiceId": "elevenlabs_generated_voice_id",
+  "createdAt": "2025-12-11T10:15:00Z",
+  "isCustom": true
+}
+```
+
+Stored in `localStorage` under key:
+```
+mindpebbles_personas
 ```
 
 ---
@@ -181,11 +230,26 @@ Returns: audio/mpeg
 
 Converted into Blob → ObjectURL.
 
-## 6.5 Timeline Component  
-`Timeline.js`
+## 6.5 Timeline Component
+`Timeline.tsx`
 
-- Displays all stored entries  
-- Clicking loads the entry into detail view  
+- Displays all stored entries
+- Clicking loads the entry into detail view
+
+## 6.6 Custom Persona Generation
+
+**PersonaCreator Component** (`PersonaCreator.tsx`):
+- Modal interface for creating custom AI personalities
+- Uses OpenAI to generate persona details (name, personality, system prompt, feedback style)
+- Uses ElevenLabs Voice Design API to generate matching voice
+- Provides preview with audio playback before confirming
+- Saves to localStorage under `mindpebbles_personas`
+
+**API Flow**:
+1. OpenAI generates persona characteristics from user prompt
+2. ElevenLabs creates custom voice preview from personality description
+3. User reviews and can regenerate or confirm
+4. On confirm, voice is finalized and persona is saved
 
 ---
 
@@ -292,19 +356,47 @@ Access via `import.meta.env`.
 
 ---
 
-# 12. Future Enhancements (Post-hackathon)
+# 12. Recent Updates
 
-- Secure backend to hide keys  
-- Advanced emotion timeline graph  
-- Word clouds from topics  
-- "Compare me over time" insights  
-- Daily prompts  
-- Pebble streaks  
-- Export as audio “memory reel”
+## Custom Personality Creation (Added 2025-12-11)
+
+Users can now create fully custom AI personalities with unique voices directly from the app:
+
+**Key Features**:
+- Describe desired personality in natural language
+- AI generates complete therapeutic persona (name, approach, style)
+- Custom voice automatically generated to match personality
+- Preview persona and voice before saving
+- Personas persist in localStorage and appear in personality selector
+- Built-in example suggestions (Southern Grandmother, Zen Monk, Life Coach, etc.)
+
+**Technical Implementation**:
+- New `Persona` data type in [src/types/index.ts](src/types/index.ts)
+- `PersonaCreator` UI component with modal interface
+- Three new API functions:
+  - `generatePersonaFromPrompt()` - OpenAI persona generation
+  - `generateVoiceFromPrompt()` - ElevenLabs voice preview
+  - `createVoiceFromPreview()` - Finalize voice
+- Integration with existing voice selection system
+- Custom personas stored alongside built-in voices
 
 ---
 
-# 13. Summary
+# 13. Future Enhancements (Post-hackathon)
+
+- Secure backend to hide keys
+- Advanced emotion timeline graph
+- Word clouds from topics
+- "Compare me over time" insights
+- Daily prompts
+- Pebble streaks
+- Export as audio "memory reel"
+- Persona editing and deletion
+- Share custom personas with others
+
+---
+
+# 14. Summary
 
 **MindPebbles** is a lightweight personal voice journal where emotional insights surface automatically and AI speaks back with comforting, human-like reflections.
 

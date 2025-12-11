@@ -71,19 +71,29 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
 
 /**
  * Analyze transcript using OpenAI to extract emotional insights
- * with character-specific interpretation based on selected voice
+ * with character-specific interpretation based on selected voice or persona
  */
-export async function analyzeTranscript(transcript: string, voiceId: string): Promise<InsightAnalysis> {
-  const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
+export async function analyzeTranscript(
+  transcript: string,
+  voiceId: string,
+  customPersona?: { name: string; systemPrompt: string; feedbackStyle: string }
+): Promise<InsightAnalysis> {
+  // Use custom persona if provided, otherwise check built-in personas
+  let systemPrompt: string;
+  let feedbackGuidance: string;
 
-  // Fallback to generic therapist if voice not found
-  const systemPrompt = persona
-    ? persona.systemPrompt
-    : 'You are an empathetic AI therapist providing emotional insights from journal entries.';
-
-  const feedbackGuidance = persona
-    ? `Write feedback in character as ${persona.name}. ${persona.feedbackStyle}.`
-    : 'Provide gentle, supportive feedback.';
+  if (customPersona) {
+    systemPrompt = customPersona.systemPrompt;
+    feedbackGuidance = `Write feedback in character as ${customPersona.name}. ${customPersona.feedbackStyle}.`;
+  } else {
+    const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
+    systemPrompt = persona
+      ? persona.systemPrompt
+      : 'You are an empathetic AI therapist providing emotional insights from journal entries.';
+    feedbackGuidance = persona
+      ? `Write feedback in character as ${persona.name}. ${persona.feedbackStyle}.`
+      : 'Provide gentle, supportive feedback.';
+  }
 
   const prompt = `Analyze the following voice journal entry and provide structured insights.
 
@@ -206,3 +216,150 @@ export const AVAILABLE_VOICES = [
   { id: 'keLVje3aBMuRpxuu0bqO', name: 'Scott (Energetic, Scottish)' },
   { id: 'hUCL5yChll0oZqA0wCKH', name: 'Old American Guy (Old, American)' },
 ];
+
+/**
+ * Generate a custom persona based on a user prompt using OpenAI
+ */
+export async function generatePersonaFromPrompt(prompt: string): Promise<{
+  name: string;
+  personality: string;
+  systemPrompt: string;
+  feedbackStyle: string;
+}> {
+  const systemPrompt = `You are a persona designer. Given a user's description, create a therapeutic AI persona.
+Return a JSON object with:
+- name: A short, memorable name (1-2 words)
+- personality: A brief description (5-10 words) capturing their essence
+- systemPrompt: A detailed system prompt (3-4 paragraphs) defining their therapeutic approach, speaking style, and personality traits
+- feedbackStyle: Instructions for how they should write feedback (1-2 sentences)
+
+The persona should be therapeutic, compassionate, and helpful for emotional journaling.`;
+
+  const userPrompt = `Create a therapeutic AI persona based on this description: "${prompt}"
+
+Make them unique, engaging, and helpful for emotional reflection. Include specific personality traits, speaking style, and therapeutic approach.`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.8,
+      response_format: { type: 'json_object' },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to generate persona: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const persona = JSON.parse(data.choices[0].message.content);
+  return persona;
+}
+
+/**
+ * Generate a custom voice using ElevenLabs Voice Design API
+ */
+export async function generateVoiceFromPrompt(prompt: string): Promise<{
+  voiceId: string;
+  previewAudioUrl: string;
+}> {
+  console.log('Generating voice with prompt:', prompt);
+
+  // Call ElevenLabs Voice Design API
+  const response = await fetch('https://api.elevenlabs.io/v1/text-to-voice/create-previews', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'xi-api-key': ELEVENLABS_API_KEY,
+    },
+    body: JSON.stringify({
+      voice_description: prompt,
+      text: "Hello, I'm here to help you reflect on your thoughts and feelings. Let's explore what's on your mind together.",
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Voice generation error:', errorText);
+    throw new Error(`Failed to generate voice: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log('Voice generation response:', data);
+
+  // The API returns previews - we'll take the first one
+  if (!data.previews || data.previews.length === 0) {
+    throw new Error('No voice previews generated');
+  }
+
+  const preview = data.previews[0];
+
+  // Convert audio data to blob URL for preview
+  // Check if audio_base_64 exists, otherwise try direct audio URL
+  let previewAudioUrl: string;
+
+  if (preview.audio_base_64) {
+    const audioBlob = await fetch(`data:audio/mpeg;base64,${preview.audio_base_64}`)
+      .then(r => r.blob());
+    previewAudioUrl = URL.createObjectURL(audioBlob);
+  } else if (preview.audio) {
+    // If direct audio URL is provided
+    const audioBlob = await fetch(preview.audio).then(r => r.blob());
+    previewAudioUrl = URL.createObjectURL(audioBlob);
+  } else {
+    throw new Error('No audio data in voice preview');
+  }
+
+  return {
+    voiceId: preview.generated_voice_id,
+    previewAudioUrl,
+  };
+}
+
+/**
+ * Create a voice from a generated voice ID
+ * This converts the preview voice into a permanent voice
+ */
+export async function createVoiceFromPreview(
+  voiceId: string,
+  name: string,
+  description: string
+): Promise<string> {
+  console.log('Creating permanent voice with:', { voiceId, name, description });
+
+  const requestBody = {
+    voice_name: name,
+    voice_description: description,
+    generated_voice_id: voiceId,
+  };
+
+  console.log('Request body:', JSON.stringify(requestBody));
+
+  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-voice/create-voice-from-preview`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'xi-api-key': ELEVENLABS_API_KEY,
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Voice creation error:', errorText);
+    throw new Error(`Failed to create voice: ${response.status} ${response.statusText} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log('Voice created:', data);
+  return data.voice_id;
+}
