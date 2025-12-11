@@ -406,3 +406,51 @@ Optimized for:
 - **Immediate emotional value**  
 - **Hackathon demonstration appeal**
 
+
+
+This is for a 3 hour hackaton
+These are the judging criteria we’ll use to evaluate projects:
+
+Using ElevenLabs is mandatory:
+
+Try to use some of these techonlogies
+
+AI Tinkerers
+
+n8n
+
+Bolt
+
+BlackBox
+
+CodeRabbit
+
+Clerk
+
+Stripe
+
+Working Prototype	The submission must run end‑to‑end and demonstrate the agent’s core functionality.	1) Code does not run at all.
+2) Major crashes or missing core features.
+3) Partial functionality, major bugs remain.
+4) Mostly stable with minor bugs.
+5) Fully functional, polished, and ready for demo.
+Technical Complexity & Integration	Depth of AI/LLM usage, tool‑use APIs, multimodal handling, and seamless integration of browser, voice, cloud, or tool agents.	1) Simple static mock‑up.
+2) Basic API call without real‑time interaction.
+3) Moderate use of one modality (e.g., only voice).
+4) Sophisticated multi‑modal integration (e.g., browser + voice).
+5) Advanced orchestration across several agents with robust error handling and real‑world data pipelines.
+Innovation & Creativity	Novelty of the agent concept, clever problem framing, and original solution design.	1) Replicates an existing demo.
+2) Minor tweak of known idea.
+3) Useful but not surprising.
+4) Creative twist or new application of known tech.
+5) Groundbreaking agent that opens a new use‑case or paradigm.
+Real‑World Impact	Potential to solve a tangible problem, user value, scalability, and deployment readiness.	1) Purely academic or toy example.
+2) Interesting but limited user relevance.
+3) Solves a niche need.
+4) Addresses a clear market or social need.
+5) Demonstrates life‑changing or large‑scale impact potential (e.g., accessibility, productivity gains).
+Theme Alignment	How well the project embodies the hackathon’s focus on conversational agents.	1) Barely related to agents (e.g., generic UI)
+2) Superficial mention of agents without functional demo.
+3) Agent that uses one partner technology but ignores all other.
+4) Clear multi‑agent implementation that showcases at least two partner technologies.
+5) Exemplifies the theme perfectly, integrating conversational agents into a cohesive autonomous assistant.

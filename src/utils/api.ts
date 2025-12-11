@@ -10,7 +10,7 @@ export interface Emotion {
 
 export interface PsychMarker {
   name: string;
-  level: 'low' | 'medium' | 'high';
+  level: "low" | "medium" | "high";
   description: string;
 }
 
@@ -26,43 +26,47 @@ export interface InsightAnalysis {
  * Transcribe audio using ElevenLabs Speech-to-Text
  */
 export async function transcribeAudio(audioBlob: Blob): Promise<string> {
-  console.log('Audio blob size:', audioBlob.size, 'type:', audioBlob.type);
+  console.log("Audio blob size:", audioBlob.size, "type:", audioBlob.type);
 
   if (audioBlob.size === 0) {
-    throw new Error('Audio blob is empty. Please record for at least 1 second.');
+    throw new Error(
+      "Audio blob is empty. Please record for at least 1 second."
+    );
   }
 
   const formData = new FormData();
 
   // Determine file extension based on MIME type
-  let filename = 'recording.webm';
-  const mimeType = audioBlob.type || 'audio/webm';
+  let filename = "recording.webm";
+  const mimeType = audioBlob.type || "audio/webm";
 
-  if (mimeType.includes('mp4') || mimeType.includes('m4a')) {
-    filename = 'recording.mp4';
-  } else if (mimeType.includes('ogg')) {
-    filename = 'recording.ogg';
-  } else if (mimeType.includes('mpeg') || mimeType.includes('mp3')) {
-    filename = 'recording.mp3';
+  if (mimeType.includes("mp4") || mimeType.includes("m4a")) {
+    filename = "recording.mp4";
+  } else if (mimeType.includes("ogg")) {
+    filename = "recording.ogg";
+  } else if (mimeType.includes("mpeg") || mimeType.includes("mp3")) {
+    filename = "recording.mp3";
   }
 
   // ElevenLabs expects the parameter to be named 'file'
   const audioFile = new File([audioBlob], filename, { type: mimeType });
-  formData.append('file', audioFile);
-  formData.append('model_id', 'scribe_v1');
+  formData.append("file", audioFile);
+  formData.append("model_id", "scribe_v1");
 
-  const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
-    method: 'POST',
+  const response = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+    method: "POST",
     headers: {
-      'xi-api-key': ELEVENLABS_API_KEY,
+      "xi-api-key": ELEVENLABS_API_KEY,
     },
     body: formData,
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('ElevenLabs STT Error Response:', errorText);
-    throw new Error(`STT failed: ${response.status} ${response.statusText} - ${errorText}`);
+    console.error("ElevenLabs STT Error Response:", errorText);
+    throw new Error(
+      `STT failed: ${response.status} ${response.statusText} - ${errorText}`
+    );
   }
 
   const data = await response.json();
@@ -89,10 +93,10 @@ export async function analyzeTranscript(
     const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
     systemPrompt = persona
       ? persona.systemPrompt
-      : 'You are an empathetic AI therapist providing emotional insights from journal entries.';
+      : "You are an empathetic AI therapist providing emotional insights from journal entries.";
     feedbackGuidance = persona
       ? `Write feedback in character as ${persona.name}. ${persona.feedbackStyle}.`
-      : 'Provide gentle, supportive feedback.';
+      : "Provide gentle, supportive feedback.";
   }
 
   const prompt = `Analyze the following voice journal entry and provide structured insights.
@@ -118,26 +122,26 @@ Common markers: rumination, self-criticism, avoidance, resilience, growth-mindse
 
 Return ONLY the JSON object, no additional text.`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: "gpt-4o-mini",
       messages: [
         {
-          role: 'system',
+          role: "system",
           content: `${systemPrompt}\n\nYou analyze voice journal entries and provide emotional insights. Always respond with valid JSON only.`,
         },
         {
-          role: 'user',
+          role: "user",
           content: prompt,
         },
       ],
       temperature: 0.7,
-      response_format: { type: 'json_object' },
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -155,22 +159,28 @@ Return ONLY the JSON object, no additional text.`;
 /**
  * Generate spoken feedback using ElevenLabs Text-to-Speech
  */
-export async function generateSpeech(text: string, voiceId: string): Promise<string> {
-  const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'xi-api-key': ELEVENLABS_API_KEY,
-    },
-    body: JSON.stringify({
-      text,
-      model_id: 'eleven_monolingual_v1',
-      voice_settings: {
-        stability: 0.5,
-        similarity_boost: 0.75,
+export async function generateSpeech(
+  text: string,
+  voiceId: string
+): Promise<string> {
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xi-api-key": ELEVENLABS_API_KEY,
       },
-    }),
-  });
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_monolingual_v1",
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.75,
+        },
+      }),
+    }
+  );
 
   if (!response.ok) {
     throw new Error(`TTS failed: ${response.statusText}`);
@@ -184,20 +194,20 @@ export async function generateSpeech(text: string, voiceId: string): Promise<str
  * Voice character personas for interpretation
  */
 export const VOICE_PERSONAS = {
-  'keLVje3aBMuRpxuu0bqO': {
-    name: 'Scott',
-    personality: 'Energetic, Scottish mentor',
+  keLVje3aBMuRpxuu0bqO: {
+    name: "Scott",
+    personality: "Energetic, Scottish mentor",
     systemPrompt: `You are Scott, an energetic Scottish life coach with a warm, enthusiastic personality.
 You speak with genuine Scottish warmth and optimism, using phrases like "aye," "bonnie," and "brilliant" naturally.
 You see potential and silver linings everywhere. You're encouraging but honest, never patronizing.
 You believe in people's ability to overcome challenges through action and resilience.
 Your feedback is uplifting, motivational, and sprinkled with gentle Scottish humor.
 You focus on growth, momentum, and finding the "wee steps" forward.`,
-    feedbackStyle: 'Warm, energetic, and action-oriented with Scottish flair',
+    feedbackStyle: "Warm, energetic, and action-oriented with Scottish flair",
   },
-  'hUCL5yChll0oZqA0wCKH': {
-    name: 'Old American Guy',
-    personality: 'Wise, weathered American sage',
+  hUCL5yChll0oZqA0wCKH: {
+    name: "Old American Guy",
+    personality: "Wise, weathered American sage",
     systemPrompt: `You are a wise, older American gentleman with decades of life experience.
 You've seen it all - the ups, the downs, the struggles, and the triumphs.
 You speak with the calm, measured wisdom of someone who's weathered many storms.
@@ -205,7 +215,21 @@ You use subtle American colloquialisms and speak in a grounded, unpretentious wa
 Your wisdom comes from lived experience, not theory. You understand that life is complex and messy.
 You offer perspective that only time and experience can provide, acknowledging pain while gently pointing toward resilience.
 You're like a trusted grandfather figure - compassionate, patient, and deeply understanding.`,
-    feedbackStyle: 'Calm, wise, and grounded with lived-experience perspective',
+    feedbackStyle: "Calm, wise, and grounded with lived-experience perspective",
+  },
+  FRCFNaM8GFkELyft3w7J: {
+    name: "Smoky Lady",
+    personality:
+      "A Dutch woman with a smoky voice shaped by a vivid and eventful life.",
+    systemPrompt: `Her voice carries a husky warmth that reflects years of varied experiences and late-night conversations.
+She grew up between coastal towns and busy city streets, collecting stories and friendships along the way.
+People often notice her confident presence and her habit of speaking with a calm, rhythmic cadence.
+She has worked in several fields, moving from one opportunity to another as her interests evolved.
+Travel, music, and shifting relationships have added color and complexity to her outlook.
+She maintains a grounded sense of humor that helps her navigate both setbacks and successes.
+Her past is full of unexpected turns, yet she treats each chapter as part of a larger, ongoing journey.
+She approaches the future with pragmatic optimism, rooted in everything she has already lived.`,
+    feedbackStyle: "Reflective, worldly-wise, with husky warmth and grounded pragmatism",
   },
 };
 
@@ -213,8 +237,8 @@ You're like a trusted grandfather figure - compassionate, patient, and deeply un
  * Get available ElevenLabs voices
  */
 export const AVAILABLE_VOICES = [
-  { id: 'keLVje3aBMuRpxuu0bqO', name: 'Scott (Energetic, Scottish)' },
-  { id: 'hUCL5yChll0oZqA0wCKH', name: 'Old American Guy (Old, American)' },
+  { id: "keLVje3aBMuRpxuu0bqO", name: "Scott (Energetic, Scottish)" },
+  { id: "hUCL5yChll0oZqA0wCKH", name: "Old American Guy (Old, American)" },
 ];
 
 /**

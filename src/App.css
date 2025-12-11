@@ -18,6 +18,7 @@
 .app-header {
   text-align: center;
   padding: 2rem 0;
+  position: relative;
 }
 
 .app-logo {
@@ -26,6 +27,63 @@
   justify-content: center;
   gap: 1rem;
   margin-bottom: 0.5rem;
+}
+
+.auth-section {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+}
+
+.sign-in-button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.sign-in-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.sign-in-button:active {
+  transform: translateY(0);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.welcome-text {
+  color: #475569;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.guest-mode-badge {
+  background: white;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.guest-mode-badge span {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .logo-icon {
