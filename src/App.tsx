@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import Recorder from './components/Recorder';
 import InsightCard from './components/InsightCard';
 import Timeline from './components/Timeline';
@@ -6,17 +7,22 @@ import type { JournalEntry } from './types';
 import { transcribeAudio, analyzeTranscript, generateSpeech, AVAILABLE_VOICES } from './utils/api';
 import './App.css';
 
-const STORAGE_KEY = 'mindpebbles_entries';
-
 function App() {
+  const { user } = useUser();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedVoiceId, setSelectedVoiceId] = useState(AVAILABLE_VOICES[0].id);
 
-  // Load entries from localStorage on mount
+  // Get user-specific storage key
+  const getStorageKey = () => {
+    return user ? `mindpebbles_entries_${user.id}` : 'mindpebbles_entries_guest';
+  };
+
+  // Load entries from localStorage on mount or when user changes
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const storageKey = getStorageKey();
+    const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -27,15 +33,19 @@ function App() {
       } catch (error) {
         console.error('Error loading entries:', error);
       }
+    } else {
+      setEntries([]);
+      setSelectedEntry(null);
     }
-  }, []);
+  }, [user]);
 
   // Save entries to localStorage whenever they change
   useEffect(() => {
+    const storageKey = getStorageKey();
     if (entries.length > 0) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      localStorage.setItem(storageKey, JSON.stringify(entries));
     }
-  }, [entries]);
+  }, [entries, user]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     setIsProcessing(true);
@@ -101,6 +111,28 @@ function App() {
             <h1>MindPebbles</h1>
           </div>
           <p className="app-tagline">Drop a pebble, create ripples of insight</p>
+          <div className="auth-section">
+            {import.meta.env.VITE_CLERK_PUBLISHABLE_KEY &&
+             import.meta.env.VITE_CLERK_PUBLISHABLE_KEY !== 'pk_test_placeholder' ? (
+              <>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="sign-in-button">Sign In</button>
+                  </SignInButton>
+                </SignedOut>
+                <SignedIn>
+                  <div className="user-info">
+                    <span className="welcome-text">Welcome, {user?.firstName || 'User'}!</span>
+                    <UserButton afterSignOutUrl="/" />
+                  </div>
+                </SignedIn>
+              </>
+            ) : (
+              <div className="guest-mode-badge">
+                <span>Guest Mode</span>
+              </div>
+            )}
+          </div>
         </header>
 
         <div className="voice-selector">
