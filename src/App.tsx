@@ -165,36 +165,70 @@ function App() {
 
   return (
     <div className="app">
-      <div className="app-main">
-        <header className="app-header">
-          <div className="app-logo">
-            <span className="logo-icon">🪨</span>
-            <h1>MindPebbles</h1>
-          </div>
-          <p className="app-tagline">Drop a pebble, create ripples of insight</p>
-          <div className="auth-section">
+      <SignedOut>
+        <div className="landing-page">
+          <div className="landing-content">
+            <div className="landing-logo">
+              <span className="logo-icon">🪨</span>
+              <h1>MindPebbles</h1>
+            </div>
+            <p className="landing-tagline">Drop a pebble, create ripples of insight</p>
+            
+            <div className="landing-description">
+              <p>Transform your thoughts into clarity with AI-powered voice journaling</p>
+            </div>
+
+            <div className="landing-features">
+              <div className="landing-feature">
+                <span className="feature-icon">🎤</span>
+                <h3>Speak Your Mind</h3>
+                <p>Record your thoughts, feelings, and experiences naturally through voice</p>
+              </div>
+              <div className="landing-feature">
+                <span className="feature-icon">🧠</span>
+                <h3>AI Analysis</h3>
+                <p>Get deep emotional insights and psychological markers from your entries</p>
+              </div>
+              <div className="landing-feature">
+                <span className="feature-icon">💭</span>
+                <h3>Spoken Reflections</h3>
+                <p>Receive personalized feedback in different AI voices and personalities</p>
+              </div>
+            </div>
+
             {import.meta.env.VITE_CLERK_PUBLISHABLE_KEY &&
              import.meta.env.VITE_CLERK_PUBLISHABLE_KEY !== 'pk_test_placeholder' ? (
-              <>
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button className="sign-in-button">Sign In</button>
-                  </SignInButton>
-                </SignedOut>
-                <SignedIn>
-                  <div className="user-info">
-                    <span className="welcome-text">Welcome, {user?.firstName || 'User'}!</span>
-                    <UserButton afterSignOutUrl="/" />
-                  </div>
-                </SignedIn>
-              </>
+              <SignInButton mode="modal">
+                <button className="landing-cta-button">Get Started</button>
+              </SignInButton>
             ) : (
-              <div className="guest-mode-badge">
-                <span>Guest Mode</span>
-              </div>
+              <button className="landing-cta-button" onClick={() => window.location.reload()}>
+                Continue as Guest
+              </button>
             )}
+
+            <div className="landing-footer">
+              <p>Your personal AI-powered journaling companion</p>
+            </div>
           </div>
-        </header>
+        </div>
+      </SignedOut>
+
+      <SignedIn>
+        <div className="app-main">
+          <header className="app-header">
+            <div className="app-logo">
+              <span className="logo-icon">🪨</span>
+              <h1>MindPebbles</h1>
+            </div>
+            <p className="app-tagline">Drop a pebble, create ripples of insight</p>
+            <div className="auth-section">
+              <div className="user-info">
+                <span className="welcome-text">Welcome, {user?.firstName || 'User'}!</span>
+                <UserButton afterSignOutUrl="/" />
+              </div>
+            </div>
+          </header>
 
         <div className="voice-selector">
           <label htmlFor="voice-select">AI Personality:</label>
@@ -278,20 +312,21 @@ function App() {
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      <Timeline
-        entries={entries}
-        selectedId={selectedEntry?.id || null}
-        onSelectEntry={handleSelectEntry}
-      />
-
-      {showPersonaCreator && (
-        <PersonaCreator
-          onPersonaCreated={handlePersonaCreated}
-          onCancel={() => setShowPersonaCreator(false)}
+        <Timeline
+          entries={entries}
+          selectedId={selectedEntry?.id || null}
+          onSelectEntry={handleSelectEntry}
         />
-      )}
+
+        {showPersonaCreator && (
+          <PersonaCreator
+            onPersonaCreated={handlePersonaCreated}
+            onCancel={() => setShowPersonaCreator(false)}
+          />
+        )}
+      </SignedIn>
     </div>
   );
 }
