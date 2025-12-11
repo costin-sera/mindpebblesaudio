@@ -7,7 +7,7 @@ import PersonaCreator from './components/PersonaCreator';
 import UpgradeModal from './components/UpgradeModal';
 import type { JournalEntry, Persona } from './types';
 import { transcribeAudio, analyzeTranscript, generateSpeech, AVAILABLE_VOICES } from './utils/api';
-import { isPremiumUser, getRemainingFreeEntries, hasReachedLimit, activatePremium } from './utils/stripe';
+import { isPremiumUser, getRemainingFreeEntries, activatePremium } from './utils/stripe';
 import './App.css';
 
 const PERSONAS_STORAGE_KEY = 'mindpebbles_personas';
@@ -96,12 +96,6 @@ function App() {
   }, [customPersonas]);
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
-    // Check entry limit before processing
-    if (hasReachedLimit(entries.length, user?.id)) {
-      setShowUpgradeModal(true);
-      return;
-    }
-
     setIsProcessing(true);
 
     try {
@@ -284,11 +278,6 @@ function App() {
                 <UserButton afterSignOutUrl="/" />
               </div>
             </div>
-            {!isPremium && entries.length > 0 && (
-              <div className="usage-counter">
-                <span>{getRemainingFreeEntries(entries.length, user?.id)} of 3 free entries remaining</span>
-              </div>
-            )}
           </header>
 
         <div className="voice-selector">

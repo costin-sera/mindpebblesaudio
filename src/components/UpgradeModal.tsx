@@ -22,16 +22,9 @@ function UpgradeModal({ onClose, remainingEntries }: UpgradeModalProps) {
         <div className="upgrade-icon">🎯</div>
         <h2>Upgrade to Premium</h2>
         
-        {remainingEntries === 0 ? (
-          <p className="upgrade-message">
-            You've used all <strong>3 free journal entries</strong>. Upgrade to Premium for unlimited access!
-          </p>
-        ) : (
-          <p className="upgrade-message">
-            You have <strong>{remainingEntries} free {remainingEntries === 1 ? 'entry' : 'entries'}</strong> remaining.
-            Upgrade now and never worry about limits again!
-          </p>
-        )}
+        <p className="upgrade-message">
+          Get unlimited journal entries and access to all premium features!
+        </p>
 
         <div className="pricing-card">
           <div className="price-header">
