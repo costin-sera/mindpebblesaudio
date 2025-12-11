@@ -5,11 +5,19 @@ const STRIPE_PAYMENT_LINK = import.meta.env.VITE_STRIPE_PAYMENT_LINK;
 export const FREE_ENTRY_LIMIT = 3;
 
 /**
+ * Get user-specific premium storage key
+ */
+function getPremiumStorageKey(userId?: string): string {
+  return userId ? `mindpebbles_premium_${userId}` : 'mindpebbles_premium_guest';
+}
+
+/**
  * Check if user is a premium subscriber
  */
-export function isPremiumUser(): boolean {
+export function isPremiumUser(userId?: string): boolean {
   // Check localStorage for premium status
-  const premiumStatus = localStorage.getItem('mindpebbles_premium');
+  const storageKey = getPremiumStorageKey(userId);
+  const premiumStatus = localStorage.getItem(storageKey);
   if (premiumStatus) {
     const { isPremium, expiresAt } = JSON.parse(premiumStatus);
     if (isPremium && new Date(expiresAt) > new Date()) {
@@ -22,8 +30,8 @@ export function isPremiumUser(): boolean {
 /**
  * Get remaining free entries for current user
  */
-export function getRemainingFreeEntries(totalEntries: number): number {
-  if (isPremiumUser()) {
+export function getRemainingFreeEntries(totalEntries: number, userId?: string): number {
+  if (isPremiumUser(userId)) {
     return Infinity;
   }
   return Math.max(0, FREE_ENTRY_LIMIT - totalEntries);
@@ -32,8 +40,8 @@ export function getRemainingFreeEntries(totalEntries: number): number {
 /**
  * Check if user has reached their entry limit
  */
-export function hasReachedLimit(totalEntries: number): boolean {
-  if (isPremiumUser()) {
+export function hasReachedLimit(totalEntries: number, userId?: string): boolean {
+  if (isPremiumUser(userId)) {
     return false;
   }
   return totalEntries >= FREE_ENTRY_LIMIT;
@@ -87,11 +95,12 @@ export async function createCheckoutSession(userEmail?: string): Promise<void> {
 /**
  * Activate premium subscription (for demo/testing)
  */
-export function activatePremium(months: number = 12): void {
+export function activatePremium(userId?: string, months: number = 12): void {
   const expiresAt = new Date();
   expiresAt.setMonth(expiresAt.getMonth() + months);
   
-  localStorage.setItem('mindpebbles_premium', JSON.stringify({
+  const storageKey = getPremiumStorageKey(userId);
+  localStorage.setItem(storageKey, JSON.stringify({
     isPremium: true,
     activatedAt: new Date().toISOString(),
     expiresAt: expiresAt.toISOString(),
@@ -101,9 +110,10 @@ export function activatePremium(months: number = 12): void {
 /**
  * Deactivate premium subscription (for testing)
  */
-export function deactivatePremium(): void {
-  localStorage.removeItem('mindpebbles_premium');
-  console.log('Premium deactivated');
+export function deactivatePremium(userId?: string): void {
+  const storageKey = getPremiumStorageKey(userId);
+  localStorage.removeItem(storageKey);
+  console.log('Premium deactivated for:', storageKey);
 }
 
 // Auto-check and clean up expired premium on load
@@ -121,12 +131,13 @@ export function deactivatePremium(): void {
 /**
  * Get subscription info for display
  */
-export function getSubscriptionInfo(): {
+export function getSubscriptionInfo(userId?: string): {
   isPremium: boolean;
   expiresAt?: string;
   daysRemaining?: number;
 } {
-  const premiumStatus = localStorage.getItem('mindpebbles_premium');
+  const storageKey = getPremiumStorageKey(userId);
+  const premiumStatus = localStorage.getItem(storageKey);
   if (!premiumStatus) {
     return { isPremium: false };
   }

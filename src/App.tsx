@@ -32,13 +32,13 @@ function App() {
 
   // Check premium status on mount
   useEffect(() => {
-    setIsPremium(isPremiumUser());
+    setIsPremium(isPremiumUser(user?.id));
     
     // Check if returning from successful Stripe payment
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment') === 'success') {
       // Activate premium
-      activatePremium();
+      activatePremium(user?.id);
       setIsPremium(true);
       
       // Clean up URL
@@ -47,9 +47,7 @@ function App() {
       // Show success message
       alert('🎉 Payment Successful!\n\nYour Premium subscription is now active!');
     }
-  }, []);
-
-  // Load entries from localStorage on mount or when user changes
+  }, [user]);  // Load entries from localStorage on mount or when user changes
   useEffect(() => {
     const storageKey = getStorageKey();
     const stored = localStorage.getItem(storageKey);
@@ -99,7 +97,7 @@ function App() {
 
   const handleRecordingComplete = async (audioBlob: Blob) => {
     // Check entry limit before processing
-    if (hasReachedLimit(entries.length)) {
+    if (hasReachedLimit(entries.length, user?.id)) {
       setShowUpgradeModal(true);
       return;
     }
@@ -272,7 +270,7 @@ function App() {
                       className="demo-activate-badge" 
                       onClick={() => {
                         if (confirm('Activate Premium? (Demo purposes)')) {
-                          activatePremium();
+                          activatePremium(user?.id);
                           setIsPremium(true);
                           window.location.reload();
                         }
@@ -288,7 +286,7 @@ function App() {
             </div>
             {!isPremium && entries.length > 0 && (
               <div className="usage-counter">
-                <span>{getRemainingFreeEntries(entries.length)} of 3 free entries remaining</span>
+                <span>{getRemainingFreeEntries(entries.length, user?.id)} of 3 free entries remaining</span>
               </div>
             )}
           </header>
@@ -400,7 +398,7 @@ function App() {
         {showUpgradeModal && (
           <UpgradeModal
             onClose={() => setShowUpgradeModal(false)}
-            remainingEntries={getRemainingFreeEntries(entries.length)}
+            remainingEntries={getRemainingFreeEntries(entries.length, user?.id)}
           />
         )}
       </SignedIn>
