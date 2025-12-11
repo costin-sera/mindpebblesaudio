@@ -7,7 +7,7 @@ import PersonaCreator from './components/PersonaCreator';
 import UpgradeModal from './components/UpgradeModal';
 import type { JournalEntry, Persona } from './types';
 import { transcribeAudio, analyzeTranscript, generateSpeech, AVAILABLE_VOICES } from './utils/api';
-import { isPremiumUser, getRemainingFreeEntries, hasReachedLimit, getSubscriptionInfo, activatePremium } from './utils/stripe';
+import { isPremiumUser, getRemainingFreeEntries, hasReachedLimit, activatePremium } from './utils/stripe';
 import './App.css';
 
 const PERSONAS_STORAGE_KEY = 'mindpebbles_personas';
