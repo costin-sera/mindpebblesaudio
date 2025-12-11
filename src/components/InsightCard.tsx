@@ -53,6 +53,24 @@ export default function InsightCard({ entry }: InsightCardProps) {
         <div className="insight-voice">Voice: {entry.voiceId}</div>
       </div>
 
+      {/* AI Reflection - Featured at the top */}
+      <div className="ai-reflection-featured">
+        <div className="reflection-header">
+          <div className="reflection-icon">🎧</div>
+          <div className="reflection-title">
+            <h2>AI Reflection</h2>
+            <p className="reflection-subtitle">Listen to your personalized insight</p>
+          </div>
+        </div>
+        <audio controls autoPlay src={entry.feedbackAudioUrl} className="reflection-audio">
+          Your browser does not support audio playback.
+        </audio>
+        <div className="reflection-text">
+          <div className="feedback-icon">💭</div>
+          <p>{entry.feedbackText}</p>
+        </div>
+      </div>
+
       {/* Summary */}
       <div className="insight-summary">
         <h3>Summary</h3>
@@ -129,29 +147,14 @@ export default function InsightCard({ entry }: InsightCardProps) {
         )}
       </div>
 
-      {/* Audio Players */}
+      {/* Original Recording */}
       <div className="insight-section">
-        <h3>Audio</h3>
-        <div className="audio-players">
-          <div className="audio-player-item">
-            <label>Your Recording</label>
-            <audio controls src={entry.originalAudioUrl}>
-              Your browser does not support audio playback.
-            </audio>
-          </div>
-          <div className="audio-player-item">
-            <label>AI Reflection</label>
-            <audio controls src={entry.feedbackAudioUrl}>
-              Your browser does not support audio playback.
-            </audio>
-          </div>
+        <h3>Your Original Recording</h3>
+        <div className="audio-player-item">
+          <audio controls src={entry.originalAudioUrl}>
+            Your browser does not support audio playback.
+          </audio>
         </div>
-      </div>
-
-      {/* Feedback Text */}
-      <div className="insight-feedback">
-        <div className="feedback-icon">💭</div>
-        <p>{entry.feedbackText}</p>
       </div>
     </div>
   );
