@@ -56,9 +56,9 @@ function App() {
       const transcript = await transcribeAudio(audioBlob);
       console.log('Transcript:', transcript);
 
-      // Step 2: Analyze transcript
-      console.log('Analyzing transcript...');
-      const analysis = await analyzeTranscript(transcript);
+      // Step 2: Analyze transcript with character-specific interpretation
+      console.log('Analyzing transcript with voice persona:', selectedVoiceId);
+      const analysis = await analyzeTranscript(transcript, selectedVoiceId);
       console.log('Analysis:', analysis);
 
       // Step 3: Generate spoken feedback

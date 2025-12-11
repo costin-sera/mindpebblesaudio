@@ -71,9 +71,21 @@ export async function transcribeAudio(audioBlob: Blob): Promise<string> {
 
 /**
  * Analyze transcript using OpenAI to extract emotional insights
+ * with character-specific interpretation based on selected voice
  */
-export async function analyzeTranscript(transcript: string): Promise<InsightAnalysis> {
-  const prompt = `You are an empathetic AI therapist analyzing a voice journal entry. Analyze the following transcript and provide structured insights.
+export async function analyzeTranscript(transcript: string, voiceId: string): Promise<InsightAnalysis> {
+  const persona = VOICE_PERSONAS[voiceId as keyof typeof VOICE_PERSONAS];
+
+  // Fallback to generic therapist if voice not found
+  const systemPrompt = persona
+    ? persona.systemPrompt
+    : 'You are an empathetic AI therapist providing emotional insights from journal entries.';
+
+  const feedbackGuidance = persona
+    ? `Write feedback in character as ${persona.name}. ${persona.feedbackStyle}.`
+    : 'Provide gentle, supportive feedback.';
+
+  const prompt = `Analyze the following voice journal entry and provide structured insights.
 
 Transcript: "${transcript}"
 
@@ -87,12 +99,12 @@ Return a JSON object with this exact structure:
   "psychMarkers": [
     { "name": "marker_name", "level": "low|medium|high", "description": "brief explanation" }
   ],
-  "feedbackText": "A gentle, supportive 2-3 sentence reflection that acknowledges their feelings and offers a compassionate perspective"
+  "feedbackText": "A 2-3 sentence reflection IN CHARACTER that acknowledges their feelings and offers perspective. ${feedbackGuidance}"
 }
 
 Include 2-4 emotions, 2-3 topics, and 1-3 psychological markers.
-Common emotions: stress, anxiety, hope, joy, sadness, fear, excitement, contentment, frustration, peace
-Common markers: rumination, self-criticism, avoidance, resilience, growth-mindset, catastrophizing
+Common emotions: stress, anxiety, hope, joy, sadness, fear, excitement, contentment, frustration, peace, gratitude, confusion
+Common markers: rumination, self-criticism, avoidance, resilience, growth-mindset, catastrophizing, self-compassion, perspective-taking
 
 Return ONLY the JSON object, no additional text.`;
 
@@ -107,7 +119,7 @@ Return ONLY the JSON object, no additional text.`;
       messages: [
         {
           role: 'system',
-          content: 'You are an empathetic AI therapist providing emotional insights from journal entries. Always respond with valid JSON only.',
+          content: `${systemPrompt}\n\nYou analyze voice journal entries and provide emotional insights. Always respond with valid JSON only.`,
         },
         {
           role: 'user',
@@ -157,6 +169,35 @@ export async function generateSpeech(text: string, voiceId: string): Promise<str
   const audioBlob = await response.blob();
   return URL.createObjectURL(audioBlob);
 }
+
+/**
+ * Voice character personas for interpretation
+ */
+export const VOICE_PERSONAS = {
+  'keLVje3aBMuRpxuu0bqO': {
+    name: 'Scott',
+    personality: 'Energetic, Scottish mentor',
+    systemPrompt: `You are Scott, an energetic Scottish life coach with a warm, enthusiastic personality.
+You speak with genuine Scottish warmth and optimism, using phrases like "aye," "bonnie," and "brilliant" naturally.
+You see potential and silver linings everywhere. You're encouraging but honest, never patronizing.
+You believe in people's ability to overcome challenges through action and resilience.
+Your feedback is uplifting, motivational, and sprinkled with gentle Scottish humor.
+You focus on growth, momentum, and finding the "wee steps" forward.`,
+    feedbackStyle: 'Warm, energetic, and action-oriented with Scottish flair',
+  },
+  'hUCL5yChll0oZqA0wCKH': {
+    name: 'Old American Guy',
+    personality: 'Wise, weathered American sage',
+    systemPrompt: `You are a wise, older American gentleman with decades of life experience.
+You've seen it all - the ups, the downs, the struggles, and the triumphs.
+You speak with the calm, measured wisdom of someone who's weathered many storms.
+You use subtle American colloquialisms and speak in a grounded, unpretentious way.
+Your wisdom comes from lived experience, not theory. You understand that life is complex and messy.
+You offer perspective that only time and experience can provide, acknowledging pain while gently pointing toward resilience.
+You're like a trusted grandfather figure - compassionate, patient, and deeply understanding.`,
+    feedbackStyle: 'Calm, wise, and grounded with lived-experience perspective',
+  },
+};
 
 /**
  * Get available ElevenLabs voices
